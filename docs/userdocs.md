@@ -1,5 +1,7 @@
 # MChef Technical Documentation
 
+## Generated using using Mistral Vibe
+https://github.com/mistralai/mistral-vibe
 ## Overview
 
 MChef is a sophisticated command-line tool designed to automate the creation and management of Moodle development environments using Docker containers. It provides a comprehensive solution for Moodle plugin development, testing, and deployment workflows.
