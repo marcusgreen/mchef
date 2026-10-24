@@ -213,6 +213,12 @@ class Recipe extends AbstractModel {
          */
         public RestoreStructure|string|null $restoreStructure = null,
 
+        /**
+         * @var PostInstall|null - Post-install configuration (site config etc.), applied after
+         * DB install, sample data and restore structure.
+         */
+        public ?PostInstall $postInstall = null,
+
         public bool $allowDevFeaturesInProduction = false,
 
         // These properties are used to build the custom config file.

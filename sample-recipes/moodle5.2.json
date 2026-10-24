@@ -1,0 +1,12 @@
+{
+  "name": "Moodle 5.2",
+  "version": "1.0.0",
+  "containerPrefix": "m520",
+  "moodleTag": "MOODLE_502_STABLE",
+  "dbType": "pgsql",
+  "dbVersion": "16",
+  "phpVersion": "8.3",
+  "host": "p53",
+  "port": 8082,
+  "updateHostHosts": false
+}

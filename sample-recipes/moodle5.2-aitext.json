@@ -1,0 +1,64 @@
+{
+  "name": "Moodle 5.2 AI Text",
+  "version": "1.0.0",
+  "containerPrefix": "m520ai",
+  "moodleTag": "MOODLE_502_STABLE",
+  "dbType": "pgsql",
+  "dbVersion": "16",
+  "phpVersion": "8.3",
+  "host": "moodle520ai.test",
+  "port": 8083,
+  "updateHostHosts": true,
+  "plugins": [
+    {
+      "repo": "https://github.com/marcusgreen/moodle-qtype_aitext.git",
+      "branch": "main"
+    },
+    {
+      "repo": "https://github.com/marcusgreen/moodle-qbehaviour_deferred_for_aitext.git",
+      "branch": "main"
+    },
+    {
+      "repo": "https://github.com/marcusgreen/moodle-qbehaviour_immediate_for_aitext.git",
+      "branch": "main"
+    }
+  ],
+  "postInstall": {
+    "siteConfig": {
+      "qtype_aitext": {
+        "backend": "core_ai_subsystem"
+      }
+    },
+    "aiProviders": [
+      {
+        "name": "OpenAI",
+        "type": "aiprovider_openai",
+        "enabled": true,
+        "config": {
+          "apikey": "${OPENAI_KEY:-}",
+          "orgid": ""
+        },
+        "actionconfig": {
+          "generate_text": {
+            "enabled": true,
+            "model": "gpt-4o",
+            "endpoint": "https://api.openai.com/v1/chat/completions"
+          },
+          "summarise_text": {
+            "enabled": true,
+            "model": "gpt-4o",
+            "endpoint": "https://api.openai.com/v1/chat/completions"
+          },
+          "explain_text": {
+            "enabled": true,
+            "model": "gpt-4o",
+            "endpoint": "https://api.openai.com/v1/chat/completions"
+          },
+          "generate_image": {
+            "enabled": false
+          }
+        }
+      }
+    ]
+  }
+}

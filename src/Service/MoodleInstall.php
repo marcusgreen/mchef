@@ -15,6 +15,7 @@ class MoodleInstall extends AbstractService {
     private Moodle $moodleService;
     private SampleData $sampleDataService;
     private RestoreData $restoreDataService;
+    private PostInstall $postInstallService;
 
     final public static function instance(): MoodleInstall {
         return self::setup_singleton();
@@ -38,6 +39,7 @@ class MoodleInstall extends AbstractService {
         $this->installDatabase($recipe, $moodleContainer, $dbContainer);
         $this->generateSampleData($recipe, $moodleContainer);
         $this->processRestoreStructure($recipe, $moodleContainer);
+        $this->postInstallService->process($recipe, $moodleContainer);
         $this->cli->success('Moodle installation completed.');
     }
 
