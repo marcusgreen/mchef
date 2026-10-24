@@ -93,9 +93,21 @@ RUN \
     sed -i "s/error_log = .*/log_errors = on/" /usr/local/etc/php/php.ini && \
     sed -i "s/error_log = .*/error_log = syslog/" /usr/local/etc/php/php.ini
 
+# Ownership and modes are set in the same RUN as each clone. Doing it in a later layer
+# forces overlayfs to copy every file up into a new layer, which takes minutes for Moodle core.
+RUN printf '%s\n' \
+        '#!/bin/sh' \
+        'set -e' \
+        "chown -R $FILE_USER:$FILE_GROUP \"\$1\"" \
+        'find "$1" -type d -exec chmod 755 {} +' \
+        'find "$1" -type f -exec chmod 644 {} +' \
+        > /usr/local/bin/mchef-fixperms && \
+    chmod +x /usr/local/bin/mchef-fixperms
+
 # Install Moodle.
 RUN rm -rf $MOODLE_PATH/*
-RUN git clone https://github.com/moodle/moodle.git --branch $MOODLE_TAG --depth 1 $MOODLE_PATH
+RUN git clone https://github.com/moodle/moodle.git --branch $MOODLE_TAG --depth 1 $MOODLE_PATH && \
+    mchef-fixperms $MOODLE_PATH
 
 {% if reposUseSsh %}
 RUN apt update && apt install --no-install-recommends -y git openssh-client
@@ -106,24 +118,23 @@ RUN mkdir -p -m 0700 ~/.ssh && ssh-keyscan github.com >> ~/.ssh/known_hosts
 {% if pluginsForDocker %}
 {% for plugin in pluginsForDocker %}
 
-RUN{% if reposUseSsh %} --mount=type=ssh {% endif %} git clone {{ plugin.repo }} --branch {{ plugin.branch }} --depth 1 $MOODLE_PATH{{ plugin.path }}
+RUN{% if reposUseSsh %} --mount=type=ssh {% endif %} git clone {{ plugin.repo }} --branch {{ plugin.branch }} --depth 1 $MOODLE_PATH{{ plugin.path }} && \
+    mchef-fixperms $MOODLE_PATH{{ plugin.path }}
 {% endfor %}
 {% endif %}
 
-COPY assets/config.php $MOODLE_PATH/config.php
+COPY --chown=$FILE_USER:$FILE_GROUP --chmod=644 assets/config.php $MOODLE_PATH/config.php
 
 {% if copyCustomConfigFile %}
-COPY assets/config-local.php $MOODLE_PATH/config-local.php
+COPY --chown=$FILE_USER:$FILE_GROUP --chmod=644 assets/config-local.php $MOODLE_PATH/config-local.php
 {% endif %}
 
 {% if (includeBehat or developer) %}
 # Install behat config helper.
-RUN git clone https://github.com/andrewnicols/moodle-browser-config.git --branch main --depth 1 $MOODLE_PATH/moodle-browser-config
-COPY assets/moodle-browser-config/config.php $MOODLE_PATH/moodle-browser-config/config.php
+RUN git clone https://github.com/andrewnicols/moodle-browser-config.git --branch main --depth 1 $MOODLE_PATH/moodle-browser-config && \
+    mchef-fixperms $MOODLE_PATH/moodle-browser-config
+COPY --chown=$FILE_USER:$FILE_GROUP --chmod=644 assets/moodle-browser-config/config.php $MOODLE_PATH/moodle-browser-config/config.php
 {% endif %}
-
-# Set ownership of moodle dirs.
-RUN find $MOODLE_PATH \( -type f -exec chmod 644 {} \; -o -type d -exec chmod 755 {} \; \) -exec chown $FILE_USER:$FILE_GROUP {} \;
 
 # Configure git to trust the moodle directory.
 RUN git config --global --add safe.directory $MOODLE_PATH
